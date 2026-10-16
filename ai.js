@@ -23,19 +23,30 @@ const anthropic = new Anthropic({
     dangerouslyAllowBrowser: true,
 })
 
-export async function getRecipeFromChefClaude(ingredientsArr) {
-    const ingredientsString = ingredientsArr.join(", ")
 
-    const msg = await anthropic.messages.create({
-        model: "claude-3-haiku-20240307",
-        max_tokens: 1024,
-        system: SYSTEM_PROMPT,
-        messages: [
-            { role: "user", content: `I have ${ingredientsString}. Please give me a recipe you'd recommend I make!` },
-        ],
-    });
-    return msg.content[0].text
+export async function getRecipeFromChefClaude(ingredientsArr) {
+    const response = await fetch(
+        "https://chef-claude-backend.vincentpapi12.workers.dev/",
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                ingredients: ingredientsArr
+            })
+        }
+    )
+
+    const data = await response.json()
+
+    if (!response.ok) {
+        throw new Error(data.error || "Failed to generate recipe.")
+    }
+
+    return data.recipe
 }
+
 
 // Make sure you set an environment variable in Scrimba 
 // for HF_ACCESS_TOKEN
